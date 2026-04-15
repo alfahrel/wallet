@@ -30,7 +30,7 @@ class TransactionsTab extends StatefulWidget {
 }
 
 class _TransactionsTabState extends State<TransactionsTab> {
-  String _selectedPeriod = 'week'; // week, month, all
+  String _selectedPeriod = 'week';
 
   Category _getCategoryById(String categoryId) {
     try {
@@ -81,35 +81,28 @@ class _TransactionsTabState extends State<TransactionsTab> {
   Map<String, double> _getCategoryBreakdown() {
     final filtered = _getFilteredTransactions();
     final breakdown = <String, double>{};
-
     for (var t in filtered.where((t) => !t.isIncome)) {
       breakdown[t.categoryId] = (breakdown[t.categoryId] ?? 0) + t.amount;
     }
-
     return breakdown;
   }
 
   List<Map<String, dynamic>> _getWeeklyData() {
     final now = DateTime.now();
     final weeklyData = <Map<String, dynamic>>[];
-
     for (int i = 6; i >= 0; i--) {
       final date = now.subtract(Duration(days: i));
       final dayStart = DateTime(date.year, date.month, date.day);
       final dayEnd = dayStart.add(const Duration(days: 1));
-
       final dayTransactions = widget.transactions.where(
         (t) => t.date.isAfter(dayStart) && t.date.isBefore(dayEnd),
       );
-
       final expenses = dayTransactions
           .where((t) => !t.isIncome)
           .fold(0.0, (sum, t) => sum + t.amount);
-
       final income = dayTransactions
           .where((t) => t.isIncome)
           .fold(0.0, (sum, t) => sum + t.amount);
-
       weeklyData.add({
         'day': DateFormat('E').format(date),
         'date': date,
@@ -117,21 +110,16 @@ class _TransactionsTabState extends State<TransactionsTab> {
         'income': income,
       });
     }
-
     return weeklyData;
   }
 
-  double get _periodSpent {
-    return _getFilteredTransactions()
-        .where((t) => !t.isIncome)
-        .fold(0.0, (sum, t) => sum + t.amount);
-  }
+  double get _periodSpent => _getFilteredTransactions()
+      .where((t) => !t.isIncome)
+      .fold(0.0, (sum, t) => sum + t.amount);
 
-  double get _periodIncome {
-    return _getFilteredTransactions()
-        .where((t) => t.isIncome)
-        .fold(0.0, (sum, t) => sum + t.amount);
-  }
+  double get _periodIncome => _getFilteredTransactions()
+      .where((t) => t.isIncome)
+      .fold(0.0, (sum, t) => sum + t.amount);
 
   @override
   Widget build(BuildContext context) {
@@ -141,327 +129,178 @@ class _TransactionsTabState extends State<TransactionsTab> {
       ..sort((a, b) => b.date.compareTo(a.date));
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       children: [
-        // Period selector
-        _buildPeriodSelector(theme),
-        const SizedBox(height: 16),
-
-        // Summary cards
-        _buildSummaryCards(theme),
-        const SizedBox(height: 16),
-
-        // Weekly trend graph
-        if (_selectedPeriod == 'week') ...[
-          _buildWeeklyTrendCard(theme),
-          const SizedBox(height: 16),
-        ],
-
-        if (sortedTransactions.isNotEmpty) ...[
-          Text(
-            AppStrings.topCategories,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+        // ── Period selector ──
+        SegmentedButton<String>(
+          segments: [
+            ButtonSegment(
+              value: 'week',
+              label: Text(AppStrings.week),
+              icon: const Icon(Icons.calendar_view_week),
             ),
-          ),
-          const SizedBox(height: 16),
-        ],
+            ButtonSegment(
+              value: 'month',
+              label: Text(AppStrings.month),
+              icon: const Icon(Icons.calendar_month),
+            ),
+            ButtonSegment(
+              value: 'all',
+              label: Text(AppStrings.allTime),
+              icon: const Icon(Icons.calendar_today),
+            ),
+          ],
+          selected: {_selectedPeriod},
+          onSelectionChanged: (v) => setState(() => _selectedPeriod = v.first),
+        ),
 
-        // Category breakdown
-        if (_getCategoryBreakdown().isNotEmpty) ...[
-          _buildCategoryBreakdownCard(theme),
-          const SizedBox(height: 24),
-        ],
+        const SizedBox(height: 16),
 
-        // Transaction list header
+        // ── Summary row ──
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              AppStrings.transactions,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: _buildStatCard(
+                theme,
+                icon: Icons.trending_down_rounded,
+                iconColor: Colors.red,
+                label: AppStrings.spent,
+                value: _formatCurrency(_periodSpent),
+                valueColor: Colors.red,
               ),
             ),
-            Text(
-              AppStrings.format(AppStrings.totalCount, [
-                sortedTransactions.length.toString(),
-              ]),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildStatCard(
+                theme,
+                icon: Icons.trending_up_rounded,
+                iconColor: Colors.green,
+                label: AppStrings.income,
+                value: _formatCurrency(_periodIncome),
+                valueColor: Colors.green,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
 
-        // Transactions list
-        if (sortedTransactions.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(40),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 64,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppStrings.noTransactionsInPeriod,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+        // ── Weekly trend ──
+        if (_selectedPeriod == 'week') ...[
+          const SizedBox(height: 20),
+          _buildWeeklyTrendSection(theme),
+        ],
+
+        // ── Category breakdown ──
+        if (_getCategoryBreakdown().isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 0, 10),
+            child: Text(
+              AppStrings.topCategories,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
-          )
-        else
-          ...sortedTransactions.map((transaction) {
-            final category = _getCategoryById(transaction.categoryId);
-            final account = widget.accounts.firstWhere(
-              (a) => a.id == transaction.accountId,
-            );
-            final isTransfer = _isTransferTransaction(transaction);
+          ),
+          _buildCategoryBreakdown(theme),
+        ],
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: theme.colorScheme.outlineVariant,
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  color: theme.colorScheme.surface,
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () =>
-                      _showTransactionOptionsDialog(context, transaction),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: isTransfer
-                                  ? theme.colorScheme.primary
-                                  : category.color,
-                              width: 2,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            isTransfer ? Icons.swap_horiz : category.icon,
-                            color: isTransfer
-                                ? theme.colorScheme.primary
-                                : category.color,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isTransfer
-                                    ? AppStrings.transfer
-                                    : category.name,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  Icon(
-                                    account.icon,
-                                    size: 14,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    account.name,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  if (transaction.note.isNotEmpty) ...[
-                                    const Text(' • '),
-                                    Flexible(
-                                      child: Text(
-                                        transaction.note,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: theme
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              Text(
-                                DateFormat('MMM d, y').format(transaction.date),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '${transaction.isIncome ? '+' : '-'}${_formatCurrency(transaction.amount)}',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isTransfer
-                                ? theme.colorScheme.primary
-                                : (transaction.isIncome
-                                      ? Colors.green
-                                      : Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+        const SizedBox(height: 20),
+
+        // ── Transactions header ──
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 0, 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppStrings.transactions,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            );
-          }),
+              Text(
+                AppStrings.format(AppStrings.totalCount, [
+                  sortedTransactions.length.toString(),
+                ]),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // ── Transactions list ──
+        if (sortedTransactions.isEmpty)
+          _buildEmptyState(theme)
+        else
+          ...sortedTransactions.map(
+            (transaction) => _buildTransactionCard(theme, context, transaction),
+          ),
+
         const SizedBox(height: 100),
       ],
     );
   }
 
-  Widget _buildPeriodSelector(ThemeData theme) {
-    return SegmentedButton<String>(
-      segments: [
-        ButtonSegment(
-          value: 'week',
-          label: Text(AppStrings.week),
-          icon: const Icon(Icons.calendar_view_week),
+  // ── Stat card ─────────────────────────────────────────────────────────────
+
+  Widget _buildStatCard(
+    ThemeData theme, {
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required Color valueColor,
+  }) {
+    return Material(
+      color: theme.colorScheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: valueColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        ButtonSegment(
-          value: 'month',
-          label: Text(AppStrings.month),
-          icon: const Icon(Icons.calendar_month),
-        ),
-        ButtonSegment(
-          value: 'all',
-          label: Text(AppStrings.allTime),
-          icon: const Icon(Icons.calendar_today),
-        ),
-      ],
-      selected: {_selectedPeriod},
-      onSelectionChanged: (v) {
-        setState(() => _selectedPeriod = v.first);
-      },
+      ),
     );
   }
 
-  Widget _buildSummaryCards(ThemeData theme) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              color: theme.colorScheme.surface,
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.trending_down,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppStrings.spent,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _formatCurrency(_periodSpent),
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              color: theme.colorScheme.surface,
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.trending_up,
-                      color: Colors.green,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppStrings.income,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _formatCurrency(_periodIncome),
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // ── Weekly trend ──────────────────────────────────────────────────────────
 
-  Widget _buildWeeklyTrendCard(ThemeData theme) {
+  Widget _buildWeeklyTrendSection(ThemeData theme) {
     final weeklyData = _getWeeklyData();
     final maxAmount = weeklyData.fold<double>(
       0,
@@ -472,112 +311,117 @@ class _TransactionsTabState extends State<TransactionsTab> {
       ].reduce((a, b) => a > b ? a : b),
     );
 
-    return Container(
-      decoration: BoxDecoration(color: theme.colorScheme.surface),
-      child: Padding(
-        padding: const EdgeInsets.all(0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppStrings.weeklyTrend,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 0, 12),
+          child: Text(
+            AppStrings.weeklyTrend,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 180,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: weeklyData.map((day) {
-                  final expenses = day['expenses'] as double;
-                  final income = day['income'] as double;
-                  final expenseHeight = maxAmount > 0
-                      ? (expenses / maxAmount * 140).clamp(4.0, 140.0)
-                      : 4.0;
-                  final incomeHeight = maxAmount > 0
-                      ? (income / maxAmount * 140).clamp(4.0, 140.0)
-                      : 4.0;
+          ),
+        ),
+        Material(
+          color: theme.colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 160,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: weeklyData.map((day) {
+                      final expenses = day['expenses'] as double;
+                      final income = day['income'] as double;
+                      final expH = maxAmount > 0
+                          ? (expenses / maxAmount * 120).clamp(4.0, 120.0)
+                          : 4.0;
+                      final incH = maxAmount > 0
+                          ? (income / maxAmount * 120).clamp(4.0, 120.0)
+                          : 4.0;
 
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              // Income bar
-                              Expanded(
-                                child: Container(
-                                  height: incomeHeight,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.7),
-                                    borderRadius: BorderRadius.circular(4),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      height: incH,
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(width: 2),
+                                  Expanded(
+                                    child: Container(
+                                      height: expH,
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 2),
-                              // Expense bar
-                              Expanded(
-                                child: Container(
-                                  height: expenseHeight,
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.7),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
+                              const SizedBox(height: 8),
+                              Text(
+                                day['day'] as String,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            day['day'] as String,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildLegendItem(theme, Colors.green, AppStrings.income),
-                const SizedBox(width: 24),
-                _buildLegendItem(theme, Colors.red, AppStrings.expenses),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildLegendDot(Colors.green, AppStrings.income, theme),
+                    const SizedBox(width: 20),
+                    _buildLegendDot(Colors.red, AppStrings.expenses, theme),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildLegendItem(ThemeData theme, Color color, String label) {
+  Widget _buildLegendDot(Color color, String label, ThemeData theme) {
     return Row(
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             color: color.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(3),
           ),
         ),
         const SizedBox(width: 6),
         Text(
           label,
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.labelSmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
@@ -585,103 +429,244 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
-  Widget _buildCategoryBreakdownCard(ThemeData theme) {
-    final breakdown = _getCategoryBreakdown();
-    final sortedEntries = breakdown.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final totalSpent = breakdown.values.fold(0.0, (sum, val) => sum + val);
+  // ── Category breakdown ────────────────────────────────────────────────────
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
-        borderRadius: BorderRadius.circular(16),
-        color: theme.colorScheme.surface,
-      ),
+  Widget _buildCategoryBreakdown(ThemeData theme) {
+    final breakdown = _getCategoryBreakdown();
+    final sorted = breakdown.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final total = breakdown.values.fold(0.0, (s, v) => s + v);
+
+    return Material(
+      color: theme.colorScheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(20),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ...sortedEntries.take(5).map((entry) {
-              final category = _getCategoryById(entry.key);
-              final percentage = totalSpent > 0
-                  ? (entry.value / totalSpent * 100)
-                  : 0.0;
+          children: sorted.take(5).map((entry) {
+            final category = _getCategoryById(entry.key);
+            final pct = total > 0 ? entry.value / total * 100 : 0.0;
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: category.color, width: 2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            category.icon,
-                            color: category.color,
-                            size: 20,
-                          ),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: category.color.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(13),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                category.name,
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        child: Icon(
+                          category.icon,
+                          color: category.color,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              category.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
                               ),
-                              Text(
-                                '${percentage.toStringAsFixed(1)}%',
-                                style: theme.textTheme.bodySmall?.copyWith(
+                            ),
+                            Text(
+                              '${pct.toStringAsFixed(1)}%',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        _formatCurrency(entry.value),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: pct / 100,
+                      minHeight: 5,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                      color: category.color,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // ── Transaction card ──────────────────────────────────────────────────────
+
+  Widget _buildTransactionCard(
+    ThemeData theme,
+    BuildContext context,
+    Transaction transaction,
+  ) {
+    final category = _getCategoryById(transaction.categoryId);
+    final account = widget.accounts.firstWhere(
+      (a) => a.id == transaction.accountId,
+    );
+    final isTransfer = _isTransferTransaction(transaction);
+    final itemColor = isTransfer ? theme.colorScheme.primary : category.color;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: theme.colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _showTransactionOptionsDialog(context, transaction),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: itemColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    isTransfer ? Icons.swap_horiz : category.icon,
+                    color: itemColor,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isTransfer ? AppStrings.transfer : category.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(
+                            account.icon,
+                            size: 12,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            account.name,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            ' • ${DateFormat('MMM d').format(transaction.date)}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (transaction.note.isNotEmpty) ...[
+                            Text(
+                              ' • ',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                transaction.note,
+                                style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          _formatCurrency(entry.value),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: percentage / 100,
-                        minHeight: 6,
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
-                        color: category.color,
+                            ),
+                          ],
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              );
-            }),
+                const SizedBox(width: 12),
+                Text(
+                  '${transaction.isIncome ? '+' : '-'}${_formatCurrency(transaction.amount)}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: isTransfer
+                        ? theme.colorScheme.primary
+                        : (transaction.isIncome ? Colors.green : Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Empty state ───────────────────────────────────────────────────────────
+
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 48),
+        child: Column(
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Icon(
+                Icons.receipt_long_outlined,
+                size: 36,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              AppStrings.noTransactionsInPeriod,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
+  // ── Dialogs (unchanged logic, updated style) ──────────────────────────────
+
   void _showTransactionOptionsDialog(
     BuildContext context,
     Transaction transaction,
   ) {
     final theme = Theme.of(context);
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -740,7 +725,6 @@ class _TransactionsTabState extends State<TransactionsTab> {
   ) {
     final theme = Theme.of(context);
     final category = _getCategoryById(transaction.categoryId);
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -912,7 +896,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                       });
                     },
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -938,7 +922,6 @@ class _TransactionsTabState extends State<TransactionsTab> {
                         const SizedBox(height: 8),
                         TextField(
                           controller: amountController,
-                          autofocus: false,
                           keyboardType: TextInputType.number,
                           style: theme.textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.bold,
@@ -968,202 +951,29 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        transactionType == 'transfer'
-                            ? AppStrings.fromAccount
-                            : AppStrings.account,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: widget.accounts.map((account) {
-                          final isSelected = selectedAccount.id == account.id;
-                          return FilterChip(
-                            selected: isSelected,
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  account.icon,
-                                  size: 16,
-                                  color: isSelected
-                                      ? theme.colorScheme.onSecondaryContainer
-                                      : account.color,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(account.name),
-                              ],
-                            ),
-                            onSelected: (selected) {
-                              if (selected) {
-                                setDialogState(() => selectedAccount = account);
-                              }
-                            },
-                            backgroundColor: theme.colorScheme.surface,
-                            selectedColor: theme.colorScheme.secondaryContainer,
-                            checkmarkColor:
-                                theme.colorScheme.onSecondaryContainer,
-                            side: BorderSide(
-                              color: isSelected
-                                  ? theme.colorScheme.secondary
-                                  : account.color.withOpacity(0.5),
-                              width: isSelected ? 2 : 1,
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
+                  _buildAccountSelector(
+                    theme,
+                    transactionType,
+                    selectedAccount,
+                    setDialogState,
                   ),
                   if (transactionType == 'transfer') ...[
                     const SizedBox(height: 24),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.toAccount,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: widget.accounts
-                              .where((a) => a.id != selectedAccount.id)
-                              .map((account) {
-                                final isSelected =
-                                    selectedToAccount?.id == account.id;
-                                return FilterChip(
-                                  selected: isSelected,
-                                  label: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        account.icon,
-                                        size: 16,
-                                        color: isSelected
-                                            ? theme
-                                                  .colorScheme
-                                                  .onSecondaryContainer
-                                            : account.color,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(account.name),
-                                    ],
-                                  ),
-                                  onSelected: (selected) {
-                                    setDialogState(() {
-                                      selectedToAccount = selected
-                                          ? account
-                                          : null;
-                                    });
-                                  },
-                                  backgroundColor: theme.colorScheme.surface,
-                                  selectedColor:
-                                      theme.colorScheme.secondaryContainer,
-                                  checkmarkColor:
-                                      theme.colorScheme.onSecondaryContainer,
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? theme.colorScheme.secondary
-                                        : account.color.withOpacity(0.5),
-                                    width: isSelected ? 2 : 1,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                );
-                              })
-                              .toList(),
-                        ),
-                      ],
+                    _buildToAccountSelector(
+                      theme,
+                      selectedAccount,
+                      selectedToAccount,
+                      setDialogState,
+                      (a) => selectedToAccount = a,
                     ),
                   ],
                   if (transactionType != 'transfer') ...[
                     const SizedBox(height: 24),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.category,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: widget.categories
-                              .where(
-                                (c) =>
-                                    c.isExpense !=
-                                    (transactionType == 'income'),
-                              )
-                              .map((category) {
-                                final isSelected =
-                                    selectedCategory.id == category.id;
-                                return FilterChip(
-                                  selected: isSelected,
-                                  label: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        category.icon,
-                                        size: 16,
-                                        color: isSelected
-                                            ? theme
-                                                  .colorScheme
-                                                  .onSecondaryContainer
-                                            : category.color,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(category.name),
-                                    ],
-                                  ),
-                                  onSelected: (selected) {
-                                    if (selected) {
-                                      setDialogState(
-                                        () => selectedCategory = category,
-                                      );
-                                    }
-                                  },
-                                  backgroundColor: theme.colorScheme.surface,
-                                  selectedColor:
-                                      theme.colorScheme.secondaryContainer,
-                                  checkmarkColor:
-                                      theme.colorScheme.onSecondaryContainer,
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? theme.colorScheme.secondary
-                                        : category.color.withOpacity(0.5),
-                                    width: isSelected ? 2 : 1,
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                );
-                              })
-                              .toList(),
-                        ),
-                      ],
+                    _buildCategorySelector(
+                      theme,
+                      transactionType,
+                      selectedCategory,
+                      setDialogState,
                     ),
                   ],
                   const SizedBox(height: 24),
@@ -1179,11 +989,12 @@ class _TransactionsTabState extends State<TransactionsTab> {
                         setDialogState(() => selectedDate = picked);
                       }
                     },
+                    borderRadius: BorderRadius.circular(14),
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
                         children: [
@@ -1223,7 +1034,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: noteController,
                     decoration: InputDecoration(
@@ -1231,7 +1042,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                       filled: true,
                       fillColor: theme.colorScheme.surfaceContainerHighest,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
                       ),
                       prefixIcon: Icon(
@@ -1241,7 +1052,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     ),
                     maxLines: 2,
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
                   Row(
                     children: [
                       Expanded(
@@ -1250,7 +1061,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           child: Text(AppStrings.cancel),
@@ -1266,7 +1077,6 @@ class _TransactionsTabState extends State<TransactionsTab> {
                               '',
                             );
                             if (clean.isEmpty) return;
-
                             widget.onUpdateTransaction(
                               Transaction(
                                 id: transaction.id,
@@ -1278,9 +1088,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                                 note: noteController.text,
                               ),
                             );
-
                             Navigator.pop(context);
-
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(AppStrings.transactionUpdated),
@@ -1291,7 +1099,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           child: Text(AppStrings.saveChanges),
@@ -1306,6 +1114,196 @@ class _TransactionsTabState extends State<TransactionsTab> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAccountSelector(
+    ThemeData theme,
+    String transactionType,
+    Account selectedAccount,
+    StateSetter setDialogState,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          transactionType == 'transfer'
+              ? AppStrings.fromAccount
+              : AppStrings.account,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widget.accounts.map((account) {
+            final isSelected = selectedAccount.id == account.id;
+            return FilterChip(
+              selected: isSelected,
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    account.icon,
+                    size: 16,
+                    color: isSelected
+                        ? theme.colorScheme.onSecondaryContainer
+                        : account.color,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(account.name),
+                ],
+              ),
+              onSelected: (s) {
+                if (s) setDialogState(() => selectedAccount = account);
+              },
+              backgroundColor: theme.colorScheme.surface,
+              selectedColor: theme.colorScheme.secondaryContainer,
+              checkmarkColor: theme.colorScheme.onSecondaryContainer,
+              side: BorderSide(
+                color: isSelected
+                    ? theme.colorScheme.secondary
+                    : account.color.withOpacity(0.5),
+                width: isSelected ? 2 : 1,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildToAccountSelector(
+    ThemeData theme,
+    Account selectedAccount,
+    Account? selectedToAccount,
+    StateSetter setDialogState,
+    Function(Account?) onChanged,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppStrings.toAccount,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widget.accounts
+              .where((a) => a.id != selectedAccount.id)
+              .map((account) {
+                final isSelected = selectedToAccount?.id == account.id;
+                return FilterChip(
+                  selected: isSelected,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        account.icon,
+                        size: 16,
+                        color: isSelected
+                            ? theme.colorScheme.onSecondaryContainer
+                            : account.color,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(account.name),
+                    ],
+                  ),
+                  onSelected: (s) {
+                    setDialogState(() => onChanged(s ? account : null));
+                  },
+                  backgroundColor: theme.colorScheme.surface,
+                  selectedColor: theme.colorScheme.secondaryContainer,
+                  checkmarkColor: theme.colorScheme.onSecondaryContainer,
+                  side: BorderSide(
+                    color: isSelected
+                        ? theme.colorScheme.secondary
+                        : account.color.withOpacity(0.5),
+                    width: isSelected ? 2 : 1,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                );
+              })
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategorySelector(
+    ThemeData theme,
+    String transactionType,
+    Category selectedCategory,
+    StateSetter setDialogState,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppStrings.category,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widget.categories
+              .where(
+                (c) =>
+                    c.isExpense != (transactionType == 'income') &&
+                    c.name != 'Transfer',
+              )
+              .map((category) {
+                final isSelected = selectedCategory.id == category.id;
+                return FilterChip(
+                  selected: isSelected,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        category.icon,
+                        size: 16,
+                        color: isSelected
+                            ? theme.colorScheme.onSecondaryContainer
+                            : category.color,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(category.name),
+                    ],
+                  ),
+                  onSelected: (s) {
+                    if (s) setDialogState(() => selectedCategory = category);
+                  },
+                  backgroundColor: theme.colorScheme.surface,
+                  selectedColor: theme.colorScheme.secondaryContainer,
+                  checkmarkColor: theme.colorScheme.onSecondaryContainer,
+                  side: BorderSide(
+                    color: isSelected
+                        ? theme.colorScheme.secondary
+                        : category.color.withOpacity(0.5),
+                    width: isSelected ? 2 : 1,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                );
+              })
+              .toList(),
+        ),
+      ],
     );
   }
 }

@@ -56,40 +56,29 @@ class _SettingsTabState extends State<SettingsTab> {
   Future<void> _checkBiometricAvailability() async {
     try {
       if (kIsWeb) {
-        setState(() {
-          _biometricAvailable = false;
-        });
+        setState(() => _biometricAvailable = false);
         return;
       }
-
       final canAuth = await _localAuth.canCheckBiometrics;
       final isDeviceSupported = await _localAuth.isDeviceSupported();
-
       if (canAuth && isDeviceSupported) {
-        final availableBiometrics = await _localAuth.getAvailableBiometrics();
+        final available = await _localAuth.getAvailableBiometrics();
         String type = 'Biometric';
-
-        if (availableBiometrics.contains(BiometricType.face)) {
+        if (available.contains(BiometricType.face))
           type = 'Face ID';
-        } else if (availableBiometrics.contains(BiometricType.fingerprint)) {
+        else if (available.contains(BiometricType.fingerprint))
           type = 'Fingerprint';
-        } else if (availableBiometrics.contains(BiometricType.iris)) {
+        else if (available.contains(BiometricType.iris))
           type = 'Iris';
-        }
-
         setState(() {
           _biometricAvailable = true;
           _biometricType = type;
         });
       } else {
-        setState(() {
-          _biometricAvailable = false;
-        });
+        setState(() => _biometricAvailable = false);
       }
-    } catch (e) {
-      setState(() {
-        _biometricAvailable = false;
-      });
+    } catch (_) {
+      setState(() => _biometricAvailable = false);
     }
   }
 
@@ -103,7 +92,6 @@ class _SettingsTabState extends State<SettingsTab> {
             biometricOnly: false,
           ),
         );
-
         if (authenticated && mounted) {
           widget.onBiometricChanged?.call(true);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -156,344 +144,247 @@ class _SettingsTabState extends State<SettingsTab> {
     final theme = Theme.of(context);
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       children: [
-        // Security Section
+        // ── Security ──
         if (_biometricAvailable) ...[
-          Container(
+          _buildSectionLabel(
+            theme,
+            Icons.security_outlined,
+            AppStrings.security,
+          ),
+          const SizedBox(height: 8),
+          Material(
+            color: theme.colorScheme.secondaryContainer,
+            borderRadius: BorderRadius.circular(20),
             clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant,
-                width: 1,
+            child: SwitchListTile(
+              secondary: _iconBox(
+                theme,
+                Icons.fingerprint,
+                theme.colorScheme.primary,
               ),
-              borderRadius: BorderRadius.circular(16),
-              color: theme.colorScheme.surface,
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.security_outlined,
-                        color: theme.colorScheme.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        AppStrings.security,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(height: 1, color: theme.colorScheme.outlineVariant),
-                SwitchListTile(
-                  secondary: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.fingerprint,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  title: Text('$_biometricType ${AppStrings.biometricLock}'),
-                  subtitle: Text(
-                    (widget.biometricEnabled ?? false)
-                        ? '${AppStrings.appIsLockedWith} $_biometricType'
-                        : AppStrings.format(AppStrings.requireToOpenApp, [
-                            _biometricType,
-                          ]),
-                  ),
-                  value: widget.biometricEnabled ?? false,
-                  onChanged: widget.onBiometricChanged != null
-                      ? _toggleBiometric
-                      : null,
-                ),
-              ],
+              title: Text('$_biometricType ${AppStrings.biometricLock}'),
+              subtitle: Text(
+                (widget.biometricEnabled ?? false)
+                    ? '${AppStrings.appIsLockedWith} $_biometricType'
+                    : AppStrings.format(AppStrings.requireToOpenApp, [
+                        _biometricType,
+                      ]),
+              ),
+              value: widget.biometricEnabled ?? false,
+              onChanged: widget.onBiometricChanged != null
+                  ? _toggleBiometric
+                  : null,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
 
-        _buildThemeSection(context),
-        const SizedBox(height: 16),
+        // ── Appearance ──
+        _buildSectionLabel(
+          theme,
+          Icons.palette_outlined,
+          AppStrings.appearance,
+        ),
+        const SizedBox(height: 8),
+        _buildAppearanceSection(context, theme),
+        const SizedBox(height: 20),
 
-        _buildLanguageSection(context),
-        const SizedBox(height: 16),
+        // ── Language ──
+        _buildSectionLabel(theme, Icons.language_outlined, AppStrings.language),
+        const SizedBox(height: 8),
+        _buildLanguageSection(context, theme),
+        const SizedBox(height: 20),
 
-        // Categories Management Section
+        // ── Categories ──
         if (widget.categories != null) ...[
-          Container(
+          _buildSectionLabel(
+            theme,
+            Icons.category_outlined,
+            AppStrings.categories,
+          ),
+          const SizedBox(height: 8),
+          Material(
+            color: theme.colorScheme.secondaryContainer,
+            borderRadius: BorderRadius.circular(20),
             clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant,
-                width: 1,
+            child: ListTile(
+              leading: _iconBox(
+                theme,
+                Icons.edit_outlined,
+                theme.colorScheme.primary,
               ),
-              borderRadius: BorderRadius.circular(16),
-              color: theme.colorScheme.surface,
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.category_outlined,
-                        color: theme.colorScheme.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        AppStrings.categories,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(height: 1, color: theme.colorScheme.outlineVariant),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  title: Text(AppStrings.manageCategories),
-                  subtitle: Text(
-                    AppStrings.format(AppStrings.categoriesCount, [
-                      widget.categories!.length.toString(),
-                    ]),
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showCategoriesManagement(context),
-                ),
-              ],
+              title: Text(AppStrings.manageCategories),
+              subtitle: Text(
+                AppStrings.format(AppStrings.categoriesCount, [
+                  widget.categories!.length.toString(),
+                ]),
+              ),
+              trailing: Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              onTap: () => _showCategoriesManagement(context),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
 
-        // Data Management Section
-        Container(
+        // ── Data management ──
+        _buildSectionLabel(
+          theme,
+          Icons.cloud_outlined,
+          AppStrings.dataManagement,
+        ),
+        const SizedBox(height: 8),
+        Material(
+          color: theme.colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            color: theme.colorScheme.surface,
-          ),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.cloud_outlined,
-                      color: theme.colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppStrings.dataManagement,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Divider(height: 1, color: theme.colorScheme.outlineVariant),
               ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.upload_file, color: Colors.green),
+                leading: _iconBox(
+                  theme,
+                  Icons.upload_file,
+                  Colors.green,
+                  bgColor: Colors.green.withOpacity(0.12),
                 ),
                 title: Text(AppStrings.exportData),
                 subtitle: Text(AppStrings.saveDataBackup),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 onTap: () => _handleExport(context),
               ),
               Divider(
                 height: 1,
                 indent: 72,
-                color: theme.colorScheme.outlineVariant,
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
               ),
               ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.download, color: Colors.blue),
+                leading: _iconBox(
+                  theme,
+                  Icons.download,
+                  Colors.blue,
+                  bgColor: Colors.blue.withOpacity(0.12),
                 ),
                 title: Text(AppStrings.importData),
                 subtitle: Text(AppStrings.restoreFromBackup),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 onTap: () => _handleImport(context),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
-        // App Information Section
-        Container(
+        // ── App information ──
+        _buildSectionLabel(
+          theme,
+          Icons.info_outline,
+          AppStrings.appInformation,
+        ),
+        const SizedBox(height: 8),
+        Material(
+          color: theme.colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            color: theme.colorScheme.surface,
-          ),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.settings_outlined,
-                      color: theme.colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppStrings.appInformation,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Divider(height: 1, color: theme.colorScheme.outlineVariant),
               ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.info_outline,
-                    color: theme.colorScheme.primary,
-                  ),
+                leading: _iconBox(
+                  theme,
+                  Icons.info_outline,
+                  theme.colorScheme.primary,
                 ),
                 title: Text(AppStrings.about),
                 subtitle: Text(AppStrings.appVersionInfo),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  showAboutDialog(
-                    context: context,
-                    applicationName: AppStrings.appName,
-                    applicationVersion: AppStrings.appVersion,
-                    applicationIcon: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        Icons.account_balance_wallet,
-                        size: 32,
-                        color: theme.colorScheme.primary,
-                      ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                onTap: () => showAboutDialog(
+                  context: context,
+                  applicationName: AppStrings.appName,
+                  applicationVersion: AppStrings.appVersion,
+                  applicationIcon: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    children: [
-                      const SizedBox(height: 16),
-                      Text(AppStrings.appDescription),
-                    ],
-                  );
-                },
+                    child: Icon(
+                      Icons.account_balance_wallet,
+                      size: 32,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  children: [
+                    const SizedBox(height: 16),
+                    Text(AppStrings.appDescription),
+                  ],
+                ),
               ),
-
               Divider(
                 height: 1,
                 indent: 72,
-                color: theme.colorScheme.outlineVariant,
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
               ),
               ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.privacy_tip_outlined,
-                    color: Colors.orange,
-                  ),
+                leading: _iconBox(
+                  theme,
+                  Icons.privacy_tip_outlined,
+                  Colors.orange,
+                  bgColor: Colors.orange.withOpacity(0.12),
                 ),
                 title: Text(AppStrings.privacyPolicy),
                 subtitle: Text(AppStrings.howWeHandleData),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text(AppStrings.privacyPolicy),
-                      content: SingleChildScrollView(
-                        child: Text(AppStrings.privacyMessage),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(AppStrings.close),
-                        ),
-                      ],
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(AppStrings.privacyPolicy),
+                    content: SingleChildScrollView(
+                      child: Text(AppStrings.privacyMessage),
                     ),
-                  );
-                },
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(AppStrings.close),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               Divider(
                 height: 1,
                 indent: 72,
-                color: theme.colorScheme.outlineVariant,
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
               ),
               ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.code, color: Colors.blue),
+                leading: _iconBox(
+                  theme,
+                  Icons.code,
+                  Colors.blue,
+                  bgColor: Colors.blue.withOpacity(0.12),
                 ),
                 title: Text(AppStrings.sourceCode),
                 subtitle: Text(AppStrings.viewOnGitHub),
-                trailing: const Icon(Icons.open_in_new),
+                trailing: Icon(
+                  Icons.open_in_new,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  size: 18,
+                ),
                 onTap: () async {
                   final uri = Uri.parse(
                     'https://github.com/alfahrelrifananda/wallet',
@@ -506,337 +397,149 @@ class _SettingsTabState extends State<SettingsTab> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
-        // Danger Zone Section
-        Container(
+        // ── Danger zone ──
+        _buildSectionLabel(
+          theme,
+          Icons.warning_outlined,
+          AppStrings.dangerZone,
+          color: theme.colorScheme.error,
+        ),
+        const SizedBox(height: 8),
+        Material(
+          color: theme.colorScheme.errorContainer.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.red.withOpacity(0.3), width: 1),
-            borderRadius: BorderRadius.circular(16),
-            color: theme.colorScheme.surface,
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.warning_outlined,
-                      color: Colors.red,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppStrings.dangerZone,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ],
+          child: ListTile(
+            leading: _iconBox(
+              theme,
+              Icons.delete_outline,
+              theme.colorScheme.error,
+              bgColor: theme.colorScheme.errorContainer.withOpacity(0.5),
+            ),
+            title: Text(AppStrings.resetAllData),
+            subtitle: Text(AppStrings.deleteAllTransactions),
+            trailing: Icon(Icons.chevron_right, color: theme.colorScheme.error),
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                icon: const Icon(
+                  Icons.warning_rounded,
+                  color: Colors.red,
+                  size: 48,
                 ),
-              ),
-              Divider(height: 1, color: theme.colorScheme.outlineVariant),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                title: Text(AppStrings.resetDataQuestion),
+                content: Text(AppStrings.resetWarning),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(AppStrings.cancel),
                   ),
-                  child: const Icon(Icons.delete_outline, color: Colors.red),
-                ),
-                title: Text(AppStrings.resetAllData),
-                subtitle: Text(AppStrings.deleteAllTransactions),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      icon: const Icon(
-                        Icons.warning_rounded,
-                        color: Colors.red,
-                        size: 48,
-                      ),
-                      title: Text(AppStrings.resetDataQuestion),
-                      content: Text(AppStrings.resetWarning),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(AppStrings.cancel),
-                        ),
-                        FilledButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            if (widget.onReset != null) {
-                              widget.onReset!();
-                            }
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          child: Text(AppStrings.reset),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      widget.onReset?.call();
+                    },
+                    style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                    child: Text(AppStrings.reset),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
+
         const SizedBox(height: 100),
       ],
     );
   }
 
-  Widget _buildLanguageSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final languageManager = Provider.of<LanguageManager>(context);
+  // ── Section label ─────────────────────────────────────────────────────────
 
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
-        borderRadius: BorderRadius.circular(16),
-        color: theme.colorScheme.surface,
-      ),
-      child: Column(
+  Widget _buildSectionLabel(
+    ThemeData theme,
+    IconData icon,
+    String label, {
+    Color? color,
+  }) {
+    final c = color ?? theme.colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 0, 0, 0),
+      child: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.language_outlined,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  AppStrings.language,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
+          Icon(icon, size: 15, color: c),
+          const SizedBox(width: 6),
+          Text(
+            label.toUpperCase(),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: c,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
             ),
-          ),
-          Divider(height: 1, color: theme.colorScheme.outlineVariant),
-          ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.translate, color: theme.colorScheme.primary),
-            ),
-            title: Text(AppStrings.changeLanguage),
-            subtitle: Text(
-              '${AppStrings.currentLanguage}: ${languageManager.getLanguageLabel()}',
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showLanguageDialog(context),
           ),
         ],
       ),
     );
   }
 
-  void _showLanguageDialog(BuildContext context) {
-    final theme = Theme.of(context);
-    final languageManager = Provider.of<LanguageManager>(
-      context,
-      listen: false,
-    );
+  // ── Icon box helper ───────────────────────────────────────────────────────
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Drag handle and header
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Center(
-                    child: Container(
-                      width: 32,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                          0.4,
-                        ),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    AppStrings.changeLanguage,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-
-            // Language options
-            _buildLanguageOption(
-              context,
-              theme,
-              languageManager,
-              'en',
-              AppStrings.english,
-              'English',
-            ),
-            Divider(
-              height: 1,
-              indent: 72,
-              color: theme.colorScheme.outlineVariant,
-            ),
-            _buildLanguageOption(
-              context,
-              theme,
-              languageManager,
-              'id',
-              AppStrings.indonesian,
-              'Bahasa Indonesia',
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLanguageOption(
-    BuildContext context,
+  Widget _iconBox(
     ThemeData theme,
-    LanguageManager languageManager,
-    String languageCode,
-    String title,
-    String subtitle,
-  ) {
-    final isSelected = languageManager.languageCode == languageCode;
-
-    return ListTile(
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-        ),
+    IconData icon,
+    Color iconColor, {
+    Color? bgColor,
+  }) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: bgColor ?? theme.colorScheme.primaryContainer.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
       ),
-      subtitle: Text(subtitle),
-      trailing: isSelected
-          ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
-          : Icon(
-              Icons.circle_outlined,
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
-            ),
-      onTap: () async {
-        await languageManager.setLanguage(languageCode);
-        if (context.mounted) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppStrings.format(AppStrings.languageChangedTo, [title]),
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      },
+      child: Icon(icon, color: iconColor, size: 20),
     );
   }
 
-  Widget _buildThemeSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final themeManager = Provider.of<ThemeManager>(context);
+  // ── Appearance section ────────────────────────────────────────────────────
 
-    return Container(
+  Widget _buildAppearanceSection(BuildContext context, ThemeData theme) {
+    final themeManager = Provider.of<ThemeManager>(context);
+    return Material(
+      color: theme.colorScheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
-        borderRadius: BorderRadius.circular(16),
-        color: theme.colorScheme.surface,
-      ),
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.palette_outlined,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  AppStrings.appearance,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: theme.colorScheme.outlineVariant),
-
-          // Theme Mode Selector
           ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                themeManager.themeMode == ThemeMode.light
-                    ? Icons.light_mode
-                    : themeManager.themeMode == ThemeMode.dark
-                    ? Icons.dark_mode
-                    : Icons.brightness_auto,
-                color: theme.colorScheme.primary,
-              ),
+            leading: _iconBox(
+              theme,
+              themeManager.themeMode == ThemeMode.light
+                  ? Icons.light_mode
+                  : themeManager.themeMode == ThemeMode.dark
+                  ? Icons.dark_mode
+                  : Icons.brightness_auto,
+              theme.colorScheme.primary,
             ),
             title: Text(AppStrings.theme),
             subtitle: Text(themeManager.getThemeModeLabel()),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             onTap: () => _showThemeModeDialog(context),
           ),
-
           Divider(
             height: 1,
             indent: 72,
-            color: theme.colorScheme.outlineVariant,
+            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
           ),
-
-          // Dynamic Color Toggle
           SwitchListTile(
-            secondary: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.colorize, color: theme.colorScheme.primary),
+            secondary: _iconBox(
+              theme,
+              Icons.colorize,
+              theme.colorScheme.primary,
             ),
             title: Text(AppStrings.materialYou),
             subtitle: Text(
@@ -864,6 +567,31 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
+  // ── Language section ──────────────────────────────────────────────────────
+
+  Widget _buildLanguageSection(BuildContext context, ThemeData theme) {
+    final languageManager = Provider.of<LanguageManager>(context);
+    return Material(
+      color: theme.colorScheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        leading: _iconBox(theme, Icons.translate, theme.colorScheme.primary),
+        title: Text(AppStrings.changeLanguage),
+        subtitle: Text(
+          '${AppStrings.currentLanguage}: ${languageManager.getLanguageLabel()}',
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        onTap: () => _showLanguageDialog(context),
+      ),
+    );
+  }
+
+  // ── Theme mode dialog ─────────────────────────────────────────────────────
+
   void _showThemeModeDialog(BuildContext context) {
     final theme = Theme.of(context);
     final themeManager = Provider.of<ThemeManager>(context, listen: false);
@@ -879,36 +607,17 @@ class _SettingsTabState extends State<SettingsTab> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag handle and header
+            _dragHandle(theme),
             Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Center(
-                    child: Container(
-                      width: 32,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                          0.4,
-                        ),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    AppStrings.chooseTheme,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                AppStrings.chooseTheme,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const Divider(height: 1),
-
-            // Theme options
             _buildThemeOption(
               context,
               theme,
@@ -967,13 +676,12 @@ class _SettingsTabState extends State<SettingsTab> {
     Color color,
   ) {
     final isSelected = themeManager.themeMode == mode;
-
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: color),
       ),
@@ -1005,9 +713,109 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
+  // ── Language dialog ───────────────────────────────────────────────────────
+
+  void _showLanguageDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final languageManager = Provider.of<LanguageManager>(
+      context,
+      listen: false,
+    );
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _dragHandle(theme),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                AppStrings.changeLanguage,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            _buildLanguageOption(
+              context,
+              theme,
+              languageManager,
+              'en',
+              AppStrings.english,
+              'English',
+            ),
+            Divider(
+              height: 1,
+              indent: 72,
+              color: theme.colorScheme.outlineVariant,
+            ),
+            _buildLanguageOption(
+              context,
+              theme,
+              languageManager,
+              'id',
+              AppStrings.indonesian,
+              'Bahasa Indonesia',
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(
+    BuildContext context,
+    ThemeData theme,
+    LanguageManager languageManager,
+    String code,
+    String title,
+    String subtitle,
+  ) {
+    final isSelected = languageManager.languageCode == code;
+    return ListTile(
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(subtitle),
+      trailing: isSelected
+          ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
+          : Icon(
+              Icons.circle_outlined,
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+            ),
+      onTap: () async {
+        await languageManager.setLanguage(code);
+        if (context.mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppStrings.format(AppStrings.languageChangedTo, [title]),
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  // ── Categories management ─────────────────────────────────────────────────
+
   void _showCategoriesManagement(BuildContext context) {
     final theme = Theme.of(context);
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1021,24 +829,11 @@ class _SettingsTabState extends State<SettingsTab> {
           ),
           child: Column(
             children: [
-              // Drag handle and header
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    Center(
-                      child: Container(
-                        width: 32,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 20),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                            0.4,
-                          ),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                    _dragHandle(theme),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1069,47 +864,30 @@ class _SettingsTabState extends State<SettingsTab> {
                 ),
               ),
               const Divider(height: 1),
-              // Categories list
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    // Expense categories
-                    Text(
-                      AppStrings.expenseCategories,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    _categoryGroupLabel(theme, AppStrings.expenseCategories),
+                    const SizedBox(height: 8),
                     ...widget.categories!
                         .where((c) => c.isExpense && c.name != 'Transfer')
                         .map(
-                          (category) => _buildCategoryTile(
+                          (c) => _buildCategoryTile(
                             context,
-                            category,
+                            c,
                             onUpdate: () => setModalState(() {}),
                           ),
                         ),
-                    const SizedBox(height: 24),
-                    // Income categories
-                    Text(
-                      AppStrings.incomeCategories,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 20),
+                    _categoryGroupLabel(theme, AppStrings.incomeCategories),
+                    const SizedBox(height: 8),
                     ...widget.categories!
                         .where((c) => !c.isExpense && c.name != 'Transfer')
                         .map(
-                          (category) => _buildCategoryTile(
+                          (c) => _buildCategoryTile(
                             context,
-                            category,
+                            c,
                             onUpdate: () => setModalState(() {}),
                           ),
                         ),
@@ -1123,65 +901,77 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
+  Widget _categoryGroupLabel(ThemeData theme, String label) {
+    return Text(
+      label.toUpperCase(),
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+      ),
+    );
+  }
+
   Widget _buildCategoryTile(
     BuildContext context,
     Category category, {
     VoidCallback? onUpdate,
   }) {
     final theme = Theme.of(context);
-    final isDefaultCategory = _isDefaultCategory(category.name);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        border: Border.all(color: category.color.withOpacity(0.3), width: 1),
-        borderRadius: BorderRadius.circular(12),
-        color: theme.colorScheme.surface,
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: category.color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(category.icon, color: category.color, size: 20),
-        ),
-        title: Text(
-          category.name,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        subtitle: Text(
-          isDefaultCategory
-              ? AppStrings.defaultCategory
-              : AppStrings.customCategory,
-          style: TextStyle(
-            fontSize: 12,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit_outlined, size: 20),
-              onPressed: () =>
-                  _showAddEditCategory(context, category, onSuccess: onUpdate),
-              tooltip: AppStrings.edit,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: theme.colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: category.color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
             ),
-            if (category.isDeletable)
+            child: Icon(category.icon, color: category.color, size: 20),
+          ),
+          title: Text(
+            category.name,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+          subtitle: Text(
+            _isDefaultCategory(category.name)
+                ? AppStrings.defaultCategory
+                : AppStrings.customCategory,
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20),
-                color: Colors.red,
-                onPressed: () => _confirmDeleteCategory(
+                icon: const Icon(Icons.edit_outlined, size: 20),
+                onPressed: () => _showAddEditCategory(
                   context,
                   category,
                   onSuccess: onUpdate,
                 ),
-                tooltip: AppStrings.delete,
+                tooltip: AppStrings.edit,
               ),
-          ],
+              if (category.isDeletable)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  color: Colors.red,
+                  onPressed: () => _confirmDeleteCategory(
+                    context,
+                    category,
+                    onSuccess: onUpdate,
+                  ),
+                  tooltip: AppStrings.delete,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1275,20 +1065,7 @@ class _SettingsTabState extends State<SettingsTab> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Drag handle
-                  Center(
-                    child: Container(
-                      width: 32,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                          0.4,
-                        ),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
+                  _dragHandle(theme),
                   Text(
                     isEditing
                         ? AppStrings.editCategory
@@ -1298,8 +1075,6 @@ class _SettingsTabState extends State<SettingsTab> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Category type
                   Text(
                     AppStrings.type,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -1321,26 +1096,24 @@ class _SettingsTabState extends State<SettingsTab> {
                       ),
                     ],
                     selected: {isExpense},
-                    onSelectionChanged: (v) {
-                      setDialogState(() => isExpense = v.first);
-                    },
+                    onSelectionChanged: (v) =>
+                        setDialogState(() => isExpense = v.first),
                   ),
-                  const SizedBox(height: 24),
-
-                  // Category name
+                  const SizedBox(height: 20),
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
                       labelText: AppStrings.categoryName,
+                      filled: true,
+                      fillColor: theme.colorScheme.surfaceContainerHighest,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
                       ),
                       prefixIcon: const Icon(Icons.label_outline),
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  // Icon selector
+                  const SizedBox(height: 20),
                   Text(
                     AppStrings.icon,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -1352,10 +1125,8 @@ class _SettingsTabState extends State<SettingsTab> {
                     height: 200,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: GridView.builder(
                       gridDelegate:
@@ -1369,22 +1140,15 @@ class _SettingsTabState extends State<SettingsTab> {
                         final icon = availableIcons[index];
                         final isSelected = icon == selectedIcon;
                         return InkWell(
-                          onTap: () {
-                            setDialogState(() => selectedIcon = icon);
-                          },
-                          borderRadius: BorderRadius.circular(8),
+                          onTap: () =>
+                              setDialogState(() => selectedIcon = icon),
+                          borderRadius: BorderRadius.circular(10),
                           child: Container(
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? selectedColor.withOpacity(0.2)
+                                  ? selectedColor.withOpacity(0.15)
                                   : Colors.transparent,
-                              border: Border.all(
-                                color: isSelected
-                                    ? selectedColor
-                                    : theme.colorScheme.outlineVariant,
-                                width: isSelected ? 2 : 1,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               icon,
@@ -1398,9 +1162,7 @@ class _SettingsTabState extends State<SettingsTab> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  // Color selector
+                  const SizedBox(height: 20),
                   Text(
                     AppStrings.color,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -1414,13 +1176,12 @@ class _SettingsTabState extends State<SettingsTab> {
                     children: availableColors.map((color) {
                       final isSelected = color == selectedColor;
                       return InkWell(
-                        onTap: () {
-                          setDialogState(() => selectedColor = color);
-                        },
+                        onTap: () =>
+                            setDialogState(() => selectedColor = color),
                         borderRadius: BorderRadius.circular(24),
                         child: Container(
-                          width: 48,
-                          height: 48,
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
                             color: color,
                             shape: BoxShape.circle,
@@ -1432,72 +1193,73 @@ class _SettingsTabState extends State<SettingsTab> {
                             ),
                           ),
                           child: isSelected
-                              ? const Icon(Icons.check, color: Colors.white)
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 22,
+                                )
                               : null,
                         ),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 32),
-
+                  const SizedBox(height: 20),
                   // Preview
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: selectedColor.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
+                  Material(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: selectedColor.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              selectedIcon,
+                              color: selectedColor,
+                              size: 28,
+                            ),
                           ),
-                          child: Icon(
-                            selectedIcon,
-                            color: selectedColor,
-                            size: 28,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppStrings.preview,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  nameController.text.isEmpty
+                                      ? AppStrings.categoryName
+                                      : nameController.text,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  isExpense
+                                      ? AppStrings.expense
+                                      : AppStrings.income,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AppStrings.preview,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                nameController.text.isEmpty
-                                    ? AppStrings.categoryName
-                                    : nameController.text,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                isExpense
-                                    ? AppStrings.expense
-                                    : AppStrings.income,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 32),
-
-                  // Action buttons
+                  const SizedBox(height: 28),
                   Row(
                     children: [
                       Expanded(
@@ -1506,7 +1268,7 @@ class _SettingsTabState extends State<SettingsTab> {
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           child: Text(AppStrings.cancel),
@@ -1528,7 +1290,6 @@ class _SettingsTabState extends State<SettingsTab> {
                               );
                               return;
                             }
-
                             final newCategory = Category(
                               id:
                                   category?.id ??
@@ -1539,16 +1300,13 @@ class _SettingsTabState extends State<SettingsTab> {
                               color: selectedColor,
                               isExpense: isExpense,
                             );
-
                             if (isEditing) {
                               widget.onUpdateCategory?.call(newCategory);
                             } else {
                               widget.onAddCategory?.call(newCategory);
                             }
-
                             Navigator.pop(context);
                             onSuccess?.call();
-
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -1564,7 +1322,7 @@ class _SettingsTabState extends State<SettingsTab> {
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           child: Text(
@@ -1585,7 +1343,7 @@ class _SettingsTabState extends State<SettingsTab> {
   }
 
   bool _isDefaultCategory(String name) {
-    const defaultCategories = [
+    const defaults = [
       'Food & Dining',
       'Transportation',
       'Shopping',
@@ -1598,7 +1356,7 @@ class _SettingsTabState extends State<SettingsTab> {
       'Investment',
       'Gift',
     ];
-    return defaultCategories.contains(name);
+    return defaults.contains(name);
   }
 
   void _confirmDeleteCategory(
@@ -1624,7 +1382,6 @@ class _SettingsTabState extends State<SettingsTab> {
               widget.onDeleteCategory?.call(category.id);
               Navigator.pop(context);
               onSuccess?.call();
-
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(AppStrings.categoryDeleted),
@@ -1640,27 +1397,37 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
+  // ── Drag handle helper ────────────────────────────────────────────────────
+
+  Widget _dragHandle(ThemeData theme) {
+    return Center(
+      child: Container(
+        width: 32,
+        height: 4,
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+
+  // ── Export / Import ───────────────────────────────────────────────────────
+
   Future<void> _handleExport(BuildContext context) async {
     try {
       if (widget.onExportData == null) {
         _showErrorSnackBar(context, AppStrings.exportFunctionNotAvailable);
         return;
       }
-
-      // Show loading
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
-
-      // Get the data from parent
       final jsonData = await widget.onExportData!();
-
-      // Close loading dialog
       if (context.mounted) Navigator.pop(context);
-
-      // Create a temporary file
       final directory = await getTemporaryDirectory();
       final timestamp = DateTime.now()
           .toIso8601String()
@@ -1668,14 +1435,11 @@ class _SettingsTabState extends State<SettingsTab> {
           .replaceAll(':', '-');
       final file = File('${directory.path}/wallet_backup_$timestamp.json');
       await file.writeAsString(jsonData);
-
-      // Share the file
       await Share.shareXFiles(
         [XFile(file.path)],
         subject: 'Wallet Backup',
         text: 'My wallet financial data backup',
       );
-
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1686,7 +1450,7 @@ class _SettingsTabState extends State<SettingsTab> {
       }
     } catch (e) {
       if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading if still open
+        Navigator.of(context).pop();
         _showErrorSnackBar(
           context,
           AppStrings.format(AppStrings.exportFailed, [e.toString()]),
@@ -1697,31 +1461,21 @@ class _SettingsTabState extends State<SettingsTab> {
 
   Future<void> _handleImport(BuildContext context) async {
     try {
-      // Show file picker
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
       );
-
-      if (result == null || result.files.single.path == null) {
-        return;
-      }
-
-      // Read the file
+      if (result == null || result.files.single.path == null) return;
       final file = File(result.files.single.path!);
       final jsonString = await file.readAsString();
-
-      // Validate JSON
       try {
         json.decode(jsonString);
-      } catch (e) {
+      } catch (_) {
         if (context.mounted) {
           _showErrorSnackBar(context, AppStrings.invalidBackupFile);
         }
         return;
       }
-
-      // Show confirmation dialog
       if (context.mounted) {
         final confirmed = await showDialog<bool>(
           context: context,
@@ -1745,24 +1499,17 @@ class _SettingsTabState extends State<SettingsTab> {
             ],
           ),
         );
-
         if (confirmed == true && context.mounted) {
-          // Show loading
           showDialog(
             context: context,
             barrierDismissible: false,
             builder: (context) =>
                 const Center(child: CircularProgressIndicator()),
           );
-
-          // Import the data
           if (widget.onImportData != null) {
             await widget.onImportData!(jsonString);
           }
-
-          // Close loading
           if (context.mounted) Navigator.pop(context);
-
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

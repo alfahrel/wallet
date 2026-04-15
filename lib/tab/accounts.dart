@@ -1091,7 +1091,7 @@ class _AccountCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: theme.colorScheme.surfaceContainerLow,
+      color: theme.colorScheme.secondaryContainer,
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

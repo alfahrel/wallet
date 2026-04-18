@@ -146,7 +146,6 @@ class _SettingsTabState extends State<SettingsTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       children: [
-        // ── Security ──
         if (_biometricAvailable) ...[
           _buildSectionLabel(
             theme,
@@ -155,7 +154,7 @@ class _SettingsTabState extends State<SettingsTab> {
           ),
           const SizedBox(height: 8),
           Material(
-            color: theme.colorScheme.secondaryContainer,
+            color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
             borderRadius: BorderRadius.circular(20),
             clipBehavior: Clip.antiAlias,
             child: SwitchListTile(
@@ -181,7 +180,6 @@ class _SettingsTabState extends State<SettingsTab> {
           const SizedBox(height: 20),
         ],
 
-        // ── Appearance ──
         _buildSectionLabel(
           theme,
           Icons.palette_outlined,
@@ -191,13 +189,11 @@ class _SettingsTabState extends State<SettingsTab> {
         _buildAppearanceSection(context, theme),
         const SizedBox(height: 20),
 
-        // ── Language ──
         _buildSectionLabel(theme, Icons.language_outlined, AppStrings.language),
         const SizedBox(height: 8),
         _buildLanguageSection(context, theme),
         const SizedBox(height: 20),
 
-        // ── Categories ──
         if (widget.categories != null) ...[
           _buildSectionLabel(
             theme,
@@ -206,7 +202,7 @@ class _SettingsTabState extends State<SettingsTab> {
           ),
           const SizedBox(height: 8),
           Material(
-            color: theme.colorScheme.secondaryContainer,
+            color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
             borderRadius: BorderRadius.circular(20),
             clipBehavior: Clip.antiAlias,
             child: ListTile(
@@ -231,7 +227,6 @@ class _SettingsTabState extends State<SettingsTab> {
           const SizedBox(height: 20),
         ],
 
-        // ── Data management ──
         _buildSectionLabel(
           theme,
           Icons.cloud_outlined,
@@ -239,7 +234,7 @@ class _SettingsTabState extends State<SettingsTab> {
         ),
         const SizedBox(height: 8),
         Material(
-          color: theme.colorScheme.secondaryContainer,
+          color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
           borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -284,7 +279,6 @@ class _SettingsTabState extends State<SettingsTab> {
         ),
         const SizedBox(height: 20),
 
-        // ── App information ──
         _buildSectionLabel(
           theme,
           Icons.info_outline,
@@ -292,7 +286,7 @@ class _SettingsTabState extends State<SettingsTab> {
         ),
         const SizedBox(height: 8),
         Material(
-          color: theme.colorScheme.secondaryContainer,
+          color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
           borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -317,7 +311,9 @@ class _SettingsTabState extends State<SettingsTab> {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
+                      color: theme.colorScheme.secondaryContainer.withOpacity(
+                        0.5,
+                      ),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -399,7 +395,6 @@ class _SettingsTabState extends State<SettingsTab> {
         ),
         const SizedBox(height: 20),
 
-        // ── Danger zone ──
         _buildSectionLabel(
           theme,
           Icons.warning_outlined,
@@ -455,8 +450,6 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
-  // ── Section label ─────────────────────────────────────────────────────────
-
   Widget _buildSectionLabel(
     ThemeData theme,
     IconData icon,
@@ -483,8 +476,6 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
-  // ── Icon box helper ───────────────────────────────────────────────────────
-
   Widget _iconBox(
     ThemeData theme,
     IconData icon,
@@ -495,19 +486,17 @@ class _SettingsTabState extends State<SettingsTab> {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: bgColor ?? theme.colorScheme.primaryContainer.withOpacity(0.6),
+        color: bgColor ?? theme.colorScheme.secondaryContainer.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, color: iconColor, size: 20),
     );
   }
 
-  // ── Appearance section ────────────────────────────────────────────────────
-
   Widget _buildAppearanceSection(BuildContext context, ThemeData theme) {
     final themeManager = Provider.of<ThemeManager>(context);
     return Material(
-      color: theme.colorScheme.secondaryContainer,
+      color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -567,12 +556,10 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
-  // ── Language section ──────────────────────────────────────────────────────
-
   Widget _buildLanguageSection(BuildContext context, ThemeData theme) {
     final languageManager = Provider.of<LanguageManager>(context);
     return Material(
-      color: theme.colorScheme.secondaryContainer,
+      color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
@@ -589,8 +576,6 @@ class _SettingsTabState extends State<SettingsTab> {
       ),
     );
   }
-
-  // ── Theme mode dialog ─────────────────────────────────────────────────────
 
   void _showThemeModeDialog(BuildContext context) {
     final theme = Theme.of(context);
@@ -713,8 +698,6 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
-  // ── Language dialog ───────────────────────────────────────────────────────
-
   void _showLanguageDialog(BuildContext context) {
     final theme = Theme.of(context);
     final languageManager = Provider.of<LanguageManager>(
@@ -811,8 +794,6 @@ class _SettingsTabState extends State<SettingsTab> {
       },
     );
   }
-
-  // ── Categories management ─────────────────────────────────────────────────
 
   void _showCategoriesManagement(BuildContext context) {
     final theme = Theme.of(context);
@@ -921,7 +902,7 @@ class _SettingsTabState extends State<SettingsTab> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: theme.colorScheme.secondaryContainer,
+        color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
@@ -1105,7 +1086,8 @@ class _SettingsTabState extends State<SettingsTab> {
                     decoration: InputDecoration(
                       labelText: AppStrings.categoryName,
                       filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest,
+                      fillColor: theme.colorScheme.secondaryContainer
+                          .withOpacity(0.5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -1121,45 +1103,49 @@ class _SettingsTabState extends State<SettingsTab> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Container(
-                    height: 200,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(16),
+                  Material(
+                    color: theme.colorScheme.secondaryContainer.withOpacity(
+                      0.5,
                     ),
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 6,
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                          ),
-                      itemCount: availableIcons.length,
-                      itemBuilder: (context, index) {
-                        final icon = availableIcons[index];
-                        final isSelected = icon == selectedIcon;
-                        return InkWell(
-                          onTap: () =>
-                              setDialogState(() => selectedIcon = icon),
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? selectedColor.withOpacity(0.15)
-                                  : Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      height: 200,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 6,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 8,
+                              ),
+                          itemCount: availableIcons.length,
+                          itemBuilder: (context, index) {
+                            final icon = availableIcons[index];
+                            final isSelected = icon == selectedIcon;
+                            return InkWell(
+                              onTap: () =>
+                                  setDialogState(() => selectedIcon = icon),
                               borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              icon,
-                              color: isSelected
-                                  ? selectedColor
-                                  : theme.colorScheme.onSurfaceVariant,
-                              size: 24,
-                            ),
-                          ),
-                        );
-                      },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? selectedColor.withOpacity(0.15)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  icon,
+                                  color: isSelected
+                                      ? selectedColor
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  size: 24,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -1204,9 +1190,10 @@ class _SettingsTabState extends State<SettingsTab> {
                     }).toList(),
                   ),
                   const SizedBox(height: 20),
-                  // Preview
                   Material(
-                    color: theme.colorScheme.surfaceContainerHighest,
+                    color: theme.colorScheme.secondaryContainer.withOpacity(
+                      0.5,
+                    ),
                     borderRadius: BorderRadius.circular(16),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -1397,8 +1384,6 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
-  // ── Drag handle helper ────────────────────────────────────────────────────
-
   Widget _dragHandle(ThemeData theme) {
     return Center(
       child: Container(
@@ -1412,8 +1397,6 @@ class _SettingsTabState extends State<SettingsTab> {
       ),
     );
   }
-
-  // ── Export / Import ───────────────────────────────────────────────────────
 
   Future<void> _handleExport(BuildContext context) async {
     try {

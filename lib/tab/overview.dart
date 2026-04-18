@@ -693,7 +693,7 @@ class OverviewTab extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: _isPastFinalDate
                         ? theme.colorScheme.errorContainer
-                        : theme.colorScheme.secondaryContainer,
+                        : theme.colorScheme.secondaryContainer.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -892,7 +892,7 @@ class OverviewTab extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Material(
-            color: theme.colorScheme.secondaryContainer,
+            color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
             borderRadius: BorderRadius.circular(20),
             clipBehavior: Clip.antiAlias,
             child: Padding(
@@ -974,7 +974,7 @@ class OverviewTab extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Material(
-            color: theme.colorScheme.secondaryContainer,
+            color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
             borderRadius: BorderRadius.circular(20),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
@@ -1072,7 +1072,7 @@ class OverviewTab extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer,
+                color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(

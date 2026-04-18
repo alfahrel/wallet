@@ -206,7 +206,6 @@ class _TransactionsTabState extends State<TransactionsTab> {
 
         const SizedBox(height: 20),
 
-        // ── Transactions header ──
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 0, 0, 10),
           child: Row(
@@ -254,7 +253,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     required Color valueColor,
   }) {
     return Material(
-      color: theme.colorScheme.secondaryContainer,
+      color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
       borderRadius: BorderRadius.circular(20),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -324,7 +323,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
           ),
         ),
         Material(
-          color: theme.colorScheme.secondaryContainer,
+          color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -429,8 +428,6 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
-  // ── Category breakdown ────────────────────────────────────────────────────
-
   Widget _buildCategoryBreakdown(ThemeData theme) {
     final breakdown = _getCategoryBreakdown();
     final sorted = breakdown.entries.toList()
@@ -438,7 +435,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     final total = breakdown.values.fold(0.0, (s, v) => s + v);
 
     return Material(
-      color: theme.colorScheme.secondaryContainer,
+      color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
       borderRadius: BorderRadius.circular(20),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -531,7 +528,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: theme.colorScheme.secondaryContainer,
+        color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
         borderRadius: BorderRadius.circular(20),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -638,7 +635,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer,
+                color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(22),
               ),
               child: Icon(
@@ -956,6 +953,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     transactionType,
                     selectedAccount,
                     setDialogState,
+                    (account) => selectedAccount = account,
                   ),
                   if (transactionType == 'transfer') ...[
                     const SizedBox(height: 24),
@@ -974,6 +972,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                       transactionType,
                       selectedCategory,
                       setDialogState,
+                      (category) => selectedCategory = category,
                     ),
                   ],
                   const SizedBox(height: 24),
@@ -1076,6 +1075,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
                               ',',
                               '',
                             );
+                            final transferCategory = widget.categories
+                                .firstWhere((c) => c.name == 'Transfer');
                             if (clean.isEmpty) return;
                             widget.onUpdateTransaction(
                               Transaction(
@@ -1084,7 +1085,9 @@ class _TransactionsTabState extends State<TransactionsTab> {
                                 isIncome: transactionType == 'income',
                                 date: selectedDate,
                                 accountId: selectedAccount.id,
-                                categoryId: selectedCategory.id,
+                                categoryId: transactionType == 'transfer'
+                                    ? transferCategory.id
+                                    : selectedCategory.id,
                                 note: noteController.text,
                               ),
                             );
@@ -1122,6 +1125,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     String transactionType,
     Account selectedAccount,
     StateSetter setDialogState,
+    Function(Account) onChanged,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1157,10 +1161,12 @@ class _TransactionsTabState extends State<TransactionsTab> {
                 ],
               ),
               onSelected: (s) {
-                if (s) setDialogState(() => selectedAccount = account);
+                if (s) setDialogState(() => onChanged(account));
               },
               backgroundColor: theme.colorScheme.surface,
-              selectedColor: theme.colorScheme.secondaryContainer,
+              selectedColor: theme.colorScheme.secondaryContainer.withOpacity(
+                0.5,
+              ),
               checkmarkColor: theme.colorScheme.onSecondaryContainer,
               side: BorderSide(
                 color: isSelected
@@ -1220,7 +1226,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     setDialogState(() => onChanged(s ? account : null));
                   },
                   backgroundColor: theme.colorScheme.surface,
-                  selectedColor: theme.colorScheme.secondaryContainer,
+                  selectedColor: theme.colorScheme.secondaryContainer
+                      .withOpacity(0.5),
                   checkmarkColor: theme.colorScheme.onSecondaryContainer,
                   side: BorderSide(
                     color: isSelected
@@ -1245,6 +1252,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     String transactionType,
     Category selectedCategory,
     StateSetter setDialogState,
+    Function(Category) onChanged,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1284,10 +1292,11 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     ],
                   ),
                   onSelected: (s) {
-                    if (s) setDialogState(() => selectedCategory = category);
+                    if (s) setDialogState(() => onChanged(category));
                   },
                   backgroundColor: theme.colorScheme.surface,
-                  selectedColor: theme.colorScheme.secondaryContainer,
+                  selectedColor: theme.colorScheme.secondaryContainer
+                      .withOpacity(0.5),
                   checkmarkColor: theme.colorScheme.onSecondaryContainer,
                   side: BorderSide(
                     color: isSelected
@@ -1303,7 +1312,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
               })
               .toList(),
         ),
-      ],  
+      ],
     );
   }
 }

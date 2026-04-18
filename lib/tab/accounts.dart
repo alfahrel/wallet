@@ -83,7 +83,9 @@ class AccountsTab extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.secondaryContainer,
+                      color: theme.colorScheme.secondaryContainer
+                          .withOpacity(0.5)
+                          .withOpacity(0.5),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Icon(
@@ -341,7 +343,8 @@ class AccountsTab extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
+                            color: theme.colorScheme.secondaryContainer
+                                .withOpacity(0.5),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Column(
@@ -379,7 +382,8 @@ class AccountsTab extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
+                            color: theme.colorScheme.secondaryContainer
+                                .withOpacity(0.5),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Column(
@@ -420,7 +424,9 @@ class AccountsTab extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
+                      color: theme.colorScheme.secondaryContainer.withOpacity(
+                        0.5,
+                      ),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -567,7 +573,9 @@ class AccountsTab extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
+                        color: theme.colorScheme.secondaryContainer.withOpacity(
+                          0.5,
+                        ),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -907,7 +915,8 @@ class AccountsTab extends StatelessWidget {
                     decoration: InputDecoration(
                       labelText: AppStrings.accountName,
                       filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest,
+                      fillColor: theme.colorScheme.secondaryContainer
+                          .withOpacity(0.5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -922,7 +931,8 @@ class AccountsTab extends StatelessWidget {
                       labelText: AppStrings.initialBalance,
                       prefixText: '$currencySymbol ',
                       filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest,
+                      fillColor: theme.colorScheme.secondaryContainer
+                          .withOpacity(0.5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -1091,7 +1101,9 @@ class _AccountCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: theme.colorScheme.secondaryContainer,
+      color: theme.colorScheme.secondaryContainer
+          .withOpacity(0.5)
+          .withOpacity(0.5),
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

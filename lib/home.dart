@@ -473,58 +473,53 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                   const SizedBox(height: 32),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withOpacity(
-                        0.3,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.amount,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: amountController,
-                          autofocus: true,
-                          keyboardType: TextInputType.number,
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: '0',
-                            hintStyle: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withOpacity(0.3),
+                  Material(
+                    color: theme.colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.amount,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: theme.colorScheme.onSecondaryContainer,
+                              fontWeight: FontWeight.w600,
                             ),
-                            prefixText: '${widget.currencySymbol} ',
-                            prefixStyle: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
-                            contentPadding: EdgeInsets.zero,
                           ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            ThousandsSeparatorInputFormatter(),
-                          ],
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: amountController,
+                            autofocus: true,
+                            keyboardType: TextInputType.number,
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: '0',
+                              hintStyle: theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withOpacity(0.3),
+                              ),
+                              prefixText: '${widget.currencySymbol} ',
+                              prefixStyle: theme.textTheme.displaySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              ThousandsSeparatorInputFormatter(),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -571,12 +566,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             selectedColor: theme.colorScheme.secondaryContainer,
                             checkmarkColor:
                                 theme.colorScheme.onSecondaryContainer,
-                            side: BorderSide(
-                              color: isSelected
-                                  ? theme.colorScheme.secondary
-                                  : account.color.withOpacity(0.5),
-                              width: isSelected ? 2 : 1,
-                            ),
+                            side: BorderSide.none,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 8,
@@ -637,12 +627,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       theme.colorScheme.secondaryContainer,
                                   checkmarkColor:
                                       theme.colorScheme.onSecondaryContainer,
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? theme.colorScheme.secondary
-                                        : account.color.withOpacity(0.5),
-                                    width: isSelected ? 2 : 1,
-                                  ),
+                                  side: BorderSide.none,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 8,
@@ -710,12 +695,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       theme.colorScheme.secondaryContainer,
                                   checkmarkColor:
                                       theme.colorScheme.onSecondaryContainer,
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? theme.colorScheme.secondary
-                                        : category.color.withOpacity(0.5),
-                                    width: isSelected ? 2 : 1,
-                                  ),
+                                  side: BorderSide.none,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 8,

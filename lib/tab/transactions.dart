@@ -242,7 +242,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
-  // ── Stat card ─────────────────────────────────────────────────────────────
+  // ── Stat card ──────────────────────────────────────────────────────────────
 
   Widget _buildStatCard(
     ThemeData theme, {
@@ -297,7 +297,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
-  // ── Weekly trend ──────────────────────────────────────────────────────────
+  // ── Weekly trend ───────────────────────────────────────────────────────────
 
   Widget _buildWeeklyTrendSection(ThemeData theme) {
     final weeklyData = _getWeeklyData();
@@ -511,7 +511,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
-  // ── Transaction card ──────────────────────────────────────────────────────
+  // ── Transaction card ───────────────────────────────────────────────────────
 
   Widget _buildTransactionCard(
     ThemeData theme,
@@ -623,7 +623,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
-  // ── Empty state ───────────────────────────────────────────────────────────
+  // ── Empty state ────────────────────────────────────────────────────────────
 
   Widget _buildEmptyState(ThemeData theme) {
     return Center(
@@ -657,7 +657,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
-  // ── Dialogs (unchanged logic, updated style) ──────────────────────────────
+  // ── Options bottom sheet ───────────────────────────────────────────────────
 
   void _showTransactionOptionsDialog(
     BuildContext context,
@@ -715,6 +715,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
       ),
     );
   }
+
+  // ── Delete confirmation ────────────────────────────────────────────────────
 
   void _showDeleteConfirmationDialog(
     BuildContext context,
@@ -799,6 +801,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
+  // ── Edit transaction ───────────────────────────────────────────────────────
+
   void _showEditTransactionDialog(
     BuildContext context,
     Transaction transaction,
@@ -843,6 +847,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Drag handle ──
                   Center(
                     child: Container(
                       width: 32,
@@ -856,6 +861,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                       ),
                     ),
                   ),
+
                   Text(
                     AppStrings.editTransaction,
                     style: theme.textTheme.headlineSmall?.copyWith(
@@ -863,6 +869,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // ── Type selector ──
                   SegmentedButton<String>(
                     segments: [
                       ButtonSegment(
@@ -893,61 +901,60 @@ class _TransactionsTabState extends State<TransactionsTab> {
                       });
                     },
                   ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withOpacity(
-                        0.3,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.amount,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: amountController,
-                          keyboardType: TextInputType.number,
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: '0',
-                            hintStyle: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withOpacity(0.3),
+                  const SizedBox(height: 32),
+
+                  // ── Amount field — matches add transaction style ──
+                  Material(
+                    color: theme.colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.amount,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: theme.colorScheme.onSecondaryContainer,
+                              fontWeight: FontWeight.w600,
                             ),
-                            prefixText: '${widget.currencySymbol} ',
-                            prefixStyle: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
-                            contentPadding: EdgeInsets.zero,
                           ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            ThousandsSeparatorInputFormatter(),
-                          ],
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: amountController,
+                            keyboardType: TextInputType.number,
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: '0',
+                              hintStyle: theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withOpacity(0.3),
+                              ),
+                              prefixText: '${widget.currencySymbol} ',
+                              prefixStyle: theme.textTheme.displaySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              ThousandsSeparatorInputFormatter(),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // ── From account ──
                   _buildAccountSelector(
                     theme,
                     transactionType,
@@ -955,6 +962,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     setDialogState,
                     (account) => selectedAccount = account,
                   ),
+
+                  // ── To account (transfer only) ──
                   if (transactionType == 'transfer') ...[
                     const SizedBox(height: 24),
                     _buildToAccountSelector(
@@ -965,6 +974,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
                       (a) => selectedToAccount = a,
                     ),
                   ],
+
+                  // ── Category ──
                   if (transactionType != 'transfer') ...[
                     const SizedBox(height: 24),
                     _buildCategorySelector(
@@ -976,6 +987,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     ),
                   ],
                   const SizedBox(height: 24),
+
+                  // ── Date picker ──
                   InkWell(
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -1034,6 +1047,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     ),
                   ),
                   const SizedBox(height: 12),
+
+                  // ── Note ──
                   TextField(
                     controller: noteController,
                     decoration: InputDecoration(
@@ -1051,7 +1066,9 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     ),
                     maxLines: 2,
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 32),
+
+                  // ── Actions ──
                   Row(
                     children: [
                       Expanded(
@@ -1060,7 +1077,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(AppStrings.cancel),
@@ -1102,7 +1119,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(AppStrings.saveChanges),
@@ -1120,6 +1137,8 @@ class _TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
+  // ── Chip selectors ─────────────────────────────────────────────────────────
+
   Widget _buildAccountSelector(
     ThemeData theme,
     String transactionType,
@@ -1136,6 +1155,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
               : AppStrings.account,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
@@ -1164,16 +1184,9 @@ class _TransactionsTabState extends State<TransactionsTab> {
                 if (s) setDialogState(() => onChanged(account));
               },
               backgroundColor: theme.colorScheme.surface,
-              selectedColor: theme.colorScheme.secondaryContainer.withOpacity(
-                0.5,
-              ),
+              selectedColor: theme.colorScheme.secondaryContainer,
               checkmarkColor: theme.colorScheme.onSecondaryContainer,
-              side: BorderSide(
-                color: isSelected
-                    ? theme.colorScheme.secondary
-                    : account.color.withOpacity(0.5),
-                width: isSelected ? 2 : 1,
-              ),
+              side: BorderSide.none,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             );
           }).toList(),
@@ -1196,6 +1209,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
           AppStrings.toAccount,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
@@ -1226,15 +1240,9 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     setDialogState(() => onChanged(s ? account : null));
                   },
                   backgroundColor: theme.colorScheme.surface,
-                  selectedColor: theme.colorScheme.secondaryContainer
-                      .withOpacity(0.5),
+                  selectedColor: theme.colorScheme.secondaryContainer,
                   checkmarkColor: theme.colorScheme.onSecondaryContainer,
-                  side: BorderSide(
-                    color: isSelected
-                        ? theme.colorScheme.secondary
-                        : account.color.withOpacity(0.5),
-                    width: isSelected ? 2 : 1,
-                  ),
+                  side: BorderSide.none,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
@@ -1261,6 +1269,7 @@ class _TransactionsTabState extends State<TransactionsTab> {
           AppStrings.category,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 12),
@@ -1295,15 +1304,9 @@ class _TransactionsTabState extends State<TransactionsTab> {
                     if (s) setDialogState(() => onChanged(category));
                   },
                   backgroundColor: theme.colorScheme.surface,
-                  selectedColor: theme.colorScheme.secondaryContainer
-                      .withOpacity(0.5),
+                  selectedColor: theme.colorScheme.secondaryContainer,
                   checkmarkColor: theme.colorScheme.onSecondaryContainer,
-                  side: BorderSide(
-                    color: isSelected
-                        ? theme.colorScheme.secondary
-                        : category.color.withOpacity(0.5),
-                    width: isSelected ? 2 : 1,
-                  ),
+                  side: BorderSide.none,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,

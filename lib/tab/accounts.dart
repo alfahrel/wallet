@@ -51,9 +51,10 @@ class AccountsTab extends StatelessWidget {
   }
 
   double get _totalBalance {
-    return accounts.fold(0.0, (sum, account) {
-      return sum + _getAccountBalance(account.id);
-    });
+    return accounts.fold(
+      0.0,
+      (sum, account) => sum + _getAccountBalance(account.id),
+    );
   }
 
   String _formatCurrency(double amount) {
@@ -83,9 +84,9 @@ class AccountsTab extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.secondaryContainer
-                          .withOpacity(0.5)
-                          .withOpacity(0.5),
+                      color: theme.colorScheme.secondaryContainer.withOpacity(
+                        0.5,
+                      ),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Icon(
@@ -116,9 +117,7 @@ class AccountsTab extends StatelessWidget {
           )
         else ...[
           _buildTotalOverviewCard(theme),
-
           const SizedBox(height: 8),
-
           ReorderableListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -163,9 +162,7 @@ class AccountsTab extends StatelessWidget {
               );
             },
           ),
-
           const SizedBox(height: 8),
-
           FilledButton.tonalIcon(
             onPressed: () => _showAddAccountDialog(context),
             icon: const Icon(Icons.add, size: 20),
@@ -219,6 +216,8 @@ class AccountsTab extends StatelessWidget {
     );
   }
 
+  // ── Account details bottom sheet ──────────────────────────────────────────
+
   void _showAccountDetailsDialog(
     BuildContext context,
     Account account,
@@ -229,6 +228,7 @@ class AccountsTab extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final netChange = income - expenses;
+    final canDelete = accounts.length > 1;
 
     showModalBottomSheet(
       context: context,
@@ -247,6 +247,7 @@ class AccountsTab extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Drag handle ──
                   Center(
                     child: Container(
                       width: 32,
@@ -261,7 +262,7 @@ class AccountsTab extends StatelessWidget {
                     ),
                   ),
 
-                  // Header
+                  // ── Header ──
                   Row(
                     children: [
                       Container(
@@ -305,7 +306,7 @@ class AccountsTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Balance card
+                  // ── Balance card ──
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
@@ -336,91 +337,31 @@ class AccountsTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Transaction count + initial balance
+                  // ── Tx count + initial balance ──
                   Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondaryContainer
-                                .withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.swap_vert,
-                                    size: 16,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    AppStrings.transactions,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                transactionCount.toString(),
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
+                        child: _buildStatTile(
+                          theme,
+                          icon: Icons.swap_vert,
+                          label: AppStrings.transactions,
+                          value: transactionCount.toString(),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondaryContainer
-                                .withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.account_balance_wallet_outlined,
-                                    size: 16,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    AppStrings.initial,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _formatCurrency(account.initialBalance),
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
+                        child: _buildStatTile(
+                          theme,
+                          icon: Icons.account_balance_wallet_outlined,
+                          label: AppStrings.initial,
+                          value: _formatCurrency(account.initialBalance),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
 
-                  // Income / Expenses / Net
+                  // ── Income / Expenses / Net ──
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -434,37 +375,13 @@ class AccountsTab extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.arrow_downward,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        AppStrings.income,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: theme
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _formatCurrency(income),
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                              child: _buildIncomeExpenseCol(
+                                theme,
+                                icon: Icons.arrow_downward,
+                                iconColor: Colors.green,
+                                label: AppStrings.income,
+                                value: _formatCurrency(income),
+                                valueColor: Colors.green,
                               ),
                             ),
                             Container(
@@ -474,37 +391,13 @@ class AccountsTab extends StatelessWidget {
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.arrow_upward,
-                                        color: Colors.red,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        AppStrings.expenses,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: theme
-                                                  .colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _formatCurrency(expenses),
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                              child: _buildIncomeExpenseCol(
+                                theme,
+                                icon: Icons.arrow_upward,
+                                iconColor: Colors.red,
+                                label: AppStrings.expenses,
+                                value: _formatCurrency(expenses),
+                                valueColor: Colors.red,
                               ),
                             ),
                           ],
@@ -541,22 +434,20 @@ class AccountsTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  if (accounts.length > 1)
+                  // ── Delete button or locked notice ──
+                  if (canDelete)
                     SizedBox(
                       width: double.infinity,
-                      child: FilledButton.tonalIcon(
+                      child: FilledButton.icon(
                         onPressed: () {
                           Navigator.pop(context);
-                          _showAccountOptionsDialog(
+                          _showDeleteConfirmationDialog(
                             context,
                             account,
                             transactionCount,
                           );
                         },
-                        icon: Icon(
-                          Icons.delete,
-                          color: theme.colorScheme.error,
-                        ),
+                        icon: const Icon(Icons.delete_outline),
                         label: Text(AppStrings.deleteAccount),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -606,117 +497,81 @@ class AccountsTab extends StatelessWidget {
     );
   }
 
-  void _showAccountOptionsDialog(
-    BuildContext context,
-    Account account,
-    int transactionCount,
-  ) {
-    final theme = Theme.of(context);
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 32,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+  Widget _buildStatTile(
+    ThemeData theme, {
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: account.color.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(account.icon, color: account.color),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              account.name,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              AppStrings.format(AppStrings.transactionCount, [
-                                transactionCount.toString(),
-                              ]),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 32),
-                if (accounts.length > 1)
-                  ListTile(
-                    leading: Icon(Icons.delete, color: theme.colorScheme.error),
-                    title: Text(AppStrings.deleteAccount),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showDeleteConfirmationDialog(
-                        context,
-                        account,
-                        transactionCount,
-                      );
-                    },
-                  )
-                else
-                  ListTile(
-                    leading: Icon(
-                      Icons.info_outline,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    title: Text(
-                      AppStrings.cannotDeleteLastAccount,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    enabled: false,
-                  ),
-                ListTile(
-                  leading: const Icon(Icons.close),
-                  title: Text(AppStrings.cancel),
-                  onTap: () => Navigator.pop(context),
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
+
+  Widget _buildIncomeExpenseCol(
+    ThemeData theme, {
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required Color valueColor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: iconColor, size: 16),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: valueColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Delete confirmation ───────────────────────────────────────────────────
 
   void _showDeleteConfirmationDialog(
     BuildContext context,
@@ -839,6 +694,8 @@ class AccountsTab extends StatelessWidget {
       ),
     );
   }
+
+  // ── Add account ───────────────────────────────────────────────────────────
 
   void _showAddAccountDialog(BuildContext context) {
     final nameController = TextEditingController();
@@ -985,9 +842,8 @@ class AccountsTab extends StatelessWidget {
                     children: colors.map((color) {
                       final isSelected = selectedColor == color;
                       return InkWell(
-                        onTap: () {
-                          setDialogState(() => selectedColor = color);
-                        },
+                        onTap: () =>
+                            setDialogState(() => selectedColor = color),
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
                           width: 44,
@@ -1038,7 +894,6 @@ class AccountsTab extends StatelessWidget {
                             if (nameController.text.isEmpty ||
                                 cleanBalance.isEmpty)
                               return;
-
                             onAddAccount(
                               Account(
                                 id: DateTime.now().millisecondsSinceEpoch
@@ -1050,7 +905,6 @@ class AccountsTab extends StatelessWidget {
                                 color: selectedColor,
                               ),
                             );
-
                             Navigator.pop(context);
                           },
                           style: FilledButton.styleFrom(
@@ -1074,6 +928,8 @@ class AccountsTab extends StatelessWidget {
     );
   }
 }
+
+// ── Account card widget ───────────────────────────────────────────────────────
 
 class _AccountCard extends StatelessWidget {
   final Account account;
@@ -1101,9 +957,7 @@ class _AccountCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: theme.colorScheme.secondaryContainer
-          .withOpacity(0.5)
-          .withOpacity(0.5),
+      color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -1123,7 +977,6 @@ class _AccountCard extends StatelessWidget {
                   ),
                 ),
               ),
-
               Container(
                 width: 48,
                 height: 48,
@@ -1134,7 +987,6 @@ class _AccountCard extends StatelessWidget {
                 child: Icon(account.icon, color: account.color, size: 24),
               ),
               const SizedBox(width: 14),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1157,7 +1009,6 @@ class _AccountCard extends StatelessWidget {
                   ],
                 ),
               ),
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [

@@ -219,10 +219,6 @@ class WelcomePage extends StatelessWidget {
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                width: 2,
-              ),
             ),
             child: Icon(
               Icons.account_balance_wallet_rounded,
@@ -304,25 +300,19 @@ class CurrencyPage extends StatelessWidget {
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outlineVariant,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      color: isSelected
-                          ? theme.colorScheme.primaryContainer.withOpacity(0.3)
-                          : theme.colorScheme.surface,
-                    ),
+                  child: Material(
+                    color: isSelected
+                        ? theme.colorScheme.secondaryContainer
+                        : theme.colorScheme.surfaceContainerHighest.withOpacity(
+                            0.5,
+                          ),
+                    borderRadius: BorderRadius.circular(16),
+                    clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () => onCurrencySelected(
                         currency['code']!,
                         currency['symbol']!,
                       ),
-                      borderRadius: BorderRadius.circular(16),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
@@ -331,12 +321,10 @@ class CurrencyPage extends StatelessWidget {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: isSelected
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.outlineVariant,
-                                  width: 2,
-                                ),
+                                color: isSelected
+                                    ? theme.colorScheme.onSecondaryContainer
+                                          .withOpacity(0.1)
+                                    : theme.colorScheme.surface,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
@@ -344,7 +332,7 @@ class CurrencyPage extends StatelessWidget {
                                   currency['symbol']!,
                                   style: TextStyle(
                                     color: isSelected
-                                        ? theme.colorScheme.primary
+                                        ? theme.colorScheme.onSecondaryContainer
                                         : theme.colorScheme.onSurfaceVariant,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
@@ -375,7 +363,7 @@ class CurrencyPage extends StatelessWidget {
                             if (isSelected)
                               Icon(
                                 Icons.check_circle,
-                                color: theme.colorScheme.primary,
+                                color: theme.colorScheme.onSecondaryContainer,
                                 size: 24,
                               ),
                           ],
@@ -549,18 +537,13 @@ class _AccountsPageState extends State<AccountsPage> {
                       final account = _localAccounts[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: theme.colorScheme.outlineVariant,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            color: theme.colorScheme.surface,
-                          ),
+                        child: Material(
+                          color: theme.colorScheme.secondaryContainer
+                              .withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(16),
+                          clipBehavior: Clip.antiAlias,
                           child: InkWell(
                             onTap: () => _showEditAccountDialog(index),
-                            borderRadius: BorderRadius.circular(16),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Row(
@@ -569,10 +552,7 @@ class _AccountsPageState extends State<AccountsPage> {
                                     width: 44,
                                     height: 44,
                                     decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: account.color,
-                                        width: 2,
-                                      ),
+                                      color: account.color.withOpacity(0.15),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -739,6 +719,7 @@ class _AddEditAccountDialogState extends State<_AddEditAccountDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── Drag handle ──
               Center(
                 child: Container(
                   width: 32,
@@ -750,6 +731,7 @@ class _AddEditAccountDialogState extends State<_AddEditAccountDialog> {
                   ),
                 ),
               ),
+
               Text(
                 isEditing ? AppStrings.editAccount : AppStrings.addAccount,
                 style: theme.textTheme.headlineSmall?.copyWith(
@@ -758,6 +740,7 @@ class _AddEditAccountDialogState extends State<_AddEditAccountDialog> {
               ),
               const SizedBox(height: 24),
 
+              // ── Account name ──
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -774,35 +757,62 @@ class _AddEditAccountDialogState extends State<_AddEditAccountDialog> {
               ),
               const SizedBox(height: 16),
 
-              TextField(
-                controller: _balanceController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: AppStrings.initialBalance,
-                  hintText: '0',
-                  filled: true,
-                  fillColor: theme.colorScheme.surfaceContainerHighest,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+              // ── Balance field — matches add transaction style ──
+              Material(
+                color: theme.colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.initialBalance,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSecondaryContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _balanceController,
+                        keyboardType: TextInputType.number,
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: '0',
+                          hintStyle: theme.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withOpacity(0.3),
+                          ),
+                          prefixText: '${widget.selectedSymbol} ',
+                          prefixStyle: theme.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          ThousandsSeparatorInputFormatter(),
+                        ],
+                      ),
+                    ],
                   ),
-                  prefixIcon: Icon(
-                    Icons.attach_money,
-                    color: theme.colorScheme.primary,
-                  ),
-                  prefixText: '${widget.selectedSymbol} ',
                 ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  ThousandsSeparatorInputFormatter(),
-                ],
               ),
               const SizedBox(height: 24),
 
+              // ── Account type chips ──
               Text(
                 AppStrings.accountType,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 12),
@@ -825,15 +835,22 @@ class _AddEditAccountDialogState extends State<_AddEditAccountDialog> {
                     backgroundColor: theme.colorScheme.surface,
                     selectedColor: theme.colorScheme.secondaryContainer,
                     checkmarkColor: theme.colorScheme.onSecondaryContainer,
+                    side: BorderSide.none,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   );
                 }).toList(),
               ),
               const SizedBox(height: 24),
 
+              // ── Color picker ──
               Text(
                 AppStrings.color,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 12),
@@ -868,6 +885,8 @@ class _AddEditAccountDialogState extends State<_AddEditAccountDialog> {
                 }).toList(),
               ),
               const SizedBox(height: 24),
+
+              // ── Actions ──
               Row(
                 children: [
                   Expanded(
@@ -970,115 +989,113 @@ class DatePage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withOpacity(0.3),
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate:
-                                selectedDate ??
-                                DateTime.now().add(const Duration(days: 30)),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(
-                              const Duration(days: 365),
+                  // ── Date picker button — borderless Material style ──
+                  Material(
+                    color: selectedDate != null
+                        ? theme.colorScheme.secondaryContainer
+                        : theme.colorScheme.surfaceContainerHighest.withOpacity(
+                            0.5,
+                          ),
+                    borderRadius: BorderRadius.circular(20),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate:
+                              selectedDate ??
+                              DateTime.now().add(const Duration(days: 30)),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
+                        );
+                        if (date != null) {
+                          onDateSelected(date);
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 20,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              color: selectedDate != null
+                                  ? theme.colorScheme.onSecondaryContainer
+                                  : theme.colorScheme.primary,
+                              size: 28,
                             ),
-                          );
-                          if (date != null) {
-                            onDateSelected(date);
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 20,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: theme.colorScheme.primary,
-                                size: 28,
-                              ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    AppStrings.endDate,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(
-                                          color: theme
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppStrings.endDate,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: selectedDate != null
+                                        ? theme.colorScheme.onSecondaryContainer
+                                              .withOpacity(0.7)
+                                        : theme.colorScheme.onSurfaceVariant,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    selectedDate == null
-                                        ? AppStrings.selectDate
-                                        : DateFormat(
-                                            'EEEE, MMM d, y',
-                                          ).format(selectedDate!),
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  selectedDate == null
+                                      ? AppStrings.selectDate
+                                      : DateFormat(
+                                          'EEEE, MMM d, y',
+                                        ).format(selectedDate!),
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: selectedDate != null
+                                        ? theme.colorScheme.onSecondaryContainer
+                                        : theme.colorScheme.onSurface,
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                   if (selectedDate != null) ...[
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withOpacity(0.3),
-                          width: 1,
+                    const SizedBox(height: 16),
+                    Material(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
                         ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.schedule,
-                            size: 20,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            AppStrings.format(AppStrings.daysFromNow, [
-                              selectedDate!
-                                  .difference(DateTime.now())
-                                  .inDays
-                                  .toString(),
-                            ]),
-                            style: theme.textTheme.titleMedium?.copyWith(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 20,
                               color: theme.colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              AppStrings.format(AppStrings.daysFromNow, [
+                                selectedDate!
+                                    .difference(DateTime.now())
+                                    .inDays
+                                    .toString(),
+                              ]),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
